@@ -42,7 +42,7 @@ const Levels = ({ levels }) => {
           <span>Level no: {level.levelNumber}</span>
           <Info> Level {level.levelPassed ? 'passed' : 'failed'}</Info>
           {level.levelNumber === selectedLevel &&
-            level.algosUsed.map((algo, index) => (
+            level.algosUsed.map(algo => (
               <StyledAlgo
                 className="algo"
                 key={`level${level.levelNumber}algo${algo.algoName}`}
