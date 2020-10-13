@@ -1,113 +1,126 @@
+/* eslint-disable react/forbid-prop-types */
+/* eslint-disable react/no-array-index-key */
+/* eslint-disable no-plusplus */
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable no-shadow */
+/* eslint-disable no-unused-vars */
+
 import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
-import { Table, ReplayWrapper } from './styled-components/MyStyledComponents';
 import { connect } from 'react-redux';
+import { Table, ReplayWrapper } from './styled-components/MyStyledComponents';
 
 const Replay = ({
-  levelGrid,
-  algo: { algoPath },
-  defaultParams: { startX, startY, endX, endY },
+	levelGrid,
+	algos,
+	defaultParams: {
+		startX, startY, endX, endY,
+	},
 }) => {
-  useEffect(() => {
-    //Set initial attributes for tiles
-    let newGrid = [...levelGrid];
-    newGrid.forEach(row => {
-      row.forEach(cell => {
-        if (cell.x === startX && cell.y === startY) {
-          cell.attr = 'start';
-        } else if (cell.x === endX && cell.y === endY) {
-          cell.attr = 'end';
-        } else if (cell.walkable === false) {
-          cell.attr = 'block';
-        } else {
-          cell.attr = 'empty';
-        }
-      });
-    });
+	// Set initial states
+	const [seconds, setSeconds] = useState(0);
+	const [replayGrid, updateReplayGrid] = useState(null);
+	const [gameAlgos, setGameAlgos] = useState(algos);
 
-    updateReplayGrid(newGrid);
+	const CELL_ATTRIBUTES = {
+		START: 'start',
+		END: 'end',
+		BLOCK: 'block',
+		EMPTY: 'empty',
+		PATH: 'path',
+	};
 
-    //Trim first and last position because they are start and end positions
-    let newPath = [...algoPath];
-    newPath.pop();
-    newPath.shift();
-    updatePath(newPath);
+	useEffect(() => {
+		// Set initial attributes for tiles
+		const newGrid = [...levelGrid];
+		newGrid.forEach((row) => {
+			row.forEach((cell) => {
+				if (cell.x === startX && cell.y === startY) {
+					cell.attr = CELL_ATTRIBUTES.START;
+				} else if (cell.x === endX && cell.y === endY) {
+					cell.attr = CELL_ATTRIBUTES.END;
+				} else if (cell.walkable === false) {
+					cell.attr = CELL_ATTRIBUTES.BLOCK;
+				} else {
+					cell.attr = CELL_ATTRIBUTES.EMPTY;
+				}
+			});
+		});
 
-    //Ensure that component will rerender every 500ms
-    const interval = setInterval(() => {
-      setSeconds(seconds => seconds + 1);
-    }, 500);
-    return () => clearInterval(interval);
-  }, []);
+		updateReplayGrid(newGrid);
 
-  //Set initial states
-  const [seconds, setSeconds] = useState(0);
-  const [replayGrid, updateReplayGrid] = useState(null);
-  const [path, updatePath] = useState(null);
+		// Ensure that component will rerender every 500ms
+		const interval = setInterval(() => {
+			setSeconds(seconds => seconds + 1);
+		}, 500);
 
-  //Play function
-  const playReplay = () => {
-    let newGrid = [...levelGrid];
-    let counter = 0;
+		return () => clearInterval(interval);
+	}, []);
 
-    //Every iteration set next step of path
-    let updaterOfPath = setInterval(() => {
-      newGrid.forEach(row => {
-        row.forEach(cell => {
-          if (path[counter][0] === cell.x && path[counter][1] === cell.y) {
-            cell.attr = 'path';
-          }
-        });
-      });
-      updateReplayGrid(newGrid);
-      counter++;
+	// Play function
+	const playReplay = (somePath) => {
+		const newGrid = [...levelGrid];
+		let counter = 0;
 
-      //Clear interval at ehe end of path
-      if (counter === path.length) {
-        clearInterval(updaterOfPath);
-      }
-    }, 500);
-  };
+		// Every iteration set next step of path
+		const updaterOfPath = setInterval(async () => {
+			newGrid.forEach((row) => {
+				row.forEach((cell) => {
+					if (somePath[counter][0] === cell.x && somePath[counter][1] === cell.y) {
+						cell.attr = CELL_ATTRIBUTES.PATH;
+					}
+				});
+			});
+			await updateReplayGrid(newGrid);
+			counter++;
 
-  return (
-    <ReplayWrapper>
-      {replayGrid && (
-        <Table>
-          <tbody>
-            {replayGrid.map((row, index) => (
-              <tr key={`r${index}`}>
-                {row.map((cell, i) => (
-                  <td key={`c${index}${i}`}>
-                    {cell.walkable ? '' : '🕋'}
-                    {cell.x === startX && cell.y === startY ? '🐀' : ''}
-                    {cell.x === endX && cell.y === endY ? '🏆' : ''}
-                    {cell.attr === 'path' ? '✈' : ''}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </Table>
-      )}
-      <button onClick={e => playReplay()}>Start replay</button>
-    </ReplayWrapper>
-  );
+			// Clear interval at ehe end of path
+			if (counter === somePath.length) {
+				await clearInterval(updaterOfPath);
+			}
+		}, 500);
+	};
+
+	// Main play - simultaneously for all algorithms
+	const playForEvery = () => {
+		gameAlgos.forEach(gameAlgo => playReplay(gameAlgo.algoPath));
+	};
+
+	return (
+		<ReplayWrapper>
+			{replayGrid && (
+				<Table>
+					<tbody>
+						{replayGrid.map((row, index) => (
+							<tr key={`r${index}`}>
+								{row.map((cell, i) => (
+									<td key={`c${index}${i}`}>
+										{cell.attr === CELL_ATTRIBUTES.BLOCK && '🕋'}
+										{cell.attr === CELL_ATTRIBUTES.START && '🐀'}
+										{cell.attr === CELL_ATTRIBUTES.END && '🏆'}
+										{cell.attr === CELL_ATTRIBUTES.PATH && '✈'}
+									</td>
+								))}
+							</tr>
+						))}
+					</tbody>
+				</Table>
+			)}
+			<button type="button" onClick={e => playForEvery()}>Start replay</button>
+		</ReplayWrapper>
+	);
 };
 
 Replay.propTypes = {
-  defaultParams: PropTypes.object.isRequired,
-  levelGrid: PropTypes.array.isRequired,
-  algo: PropTypes.object.isRequired,
+	defaultParams: PropTypes.object.isRequired,
+	levelGrid: PropTypes.array.isRequired,
+	algos: PropTypes.array.isRequired,
 };
 
-const mapStateToProps = state => {
-  return {
-    defaultParams: state.defaultParams,
-  };
-};
+const mapStateToProps = state => ({
+	defaultParams: state.defaultParams,
+});
 
-const mapDispatchToProps = dispatch => {
-  return {};
-};
+const mapDispatchToProps = dispatch => ({});
 
 export default connect(mapStateToProps, mapDispatchToProps)(Replay);
