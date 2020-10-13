@@ -121,6 +121,4 @@ const mapStateToProps = state => ({
 	defaultParams: state.defaultParams,
 });
 
-const mapDispatchToProps = dispatch => ({});
-
-export default connect(mapStateToProps, mapDispatchToProps)(Replay);
+export default connect(mapStateToProps)(Replay);

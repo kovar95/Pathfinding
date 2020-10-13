@@ -180,9 +180,9 @@ const Game = ({
 							<tr key={`r${index}`}>
 								{row.map((cell, i) => (
 									<td key={`c${index}${i}`}>
-										{cell.walkable ? '' : '🕋'}
-										{cell.x === startX && cell.y === startY ? '🐀' : ''}
-										{cell.x === endX && cell.y === endY ? '🏆' : ''}
+										{!cell.walkable && '🕋'}
+										{cell.x === startX && cell.y === startY && '🐀'}
+										{cell.x === endX && cell.y === endY && '🏆'}
 									</td>
 								))}
 							</tr>
@@ -203,6 +203,4 @@ const mapStateToProps = state => ({
 	defaultParams: state.defaultParams,
 });
 
-const mapDispatchToProps = dispatch => ({});
-
-export default connect(mapStateToProps, mapDispatchToProps)(Game);
+export default connect(mapStateToProps)(Game);

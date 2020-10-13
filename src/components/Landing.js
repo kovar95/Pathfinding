@@ -76,12 +76,7 @@ const Landing = ({
 			setAlert('Height must me between 2 and 10!');
 		} else if (width > 10 || width < 2) {
 			setAlert('Width must me between 2 and 10!');
-		} else if (
-			startX < 0 ||
-      startX >= width ||
-      startY < 0 ||
-      startY >= height
-		) {
+		} else if (startX < 0 || startX >= width || startY < 0 || startY >= height) {
 			setAlert('Start coordinates are not appropriate! ');
 		} else if (endX < 0 || endX >= width || endY < 0 || endY >= height) {
 			setAlert('End coordinates are not appropriate! ');
